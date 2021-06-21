@@ -28,7 +28,8 @@ package zoekt
 // 14: languages
 // 15: rune based symbol sections
 // 16: ctags metadata
-const IndexFormatVersion = 16
+// 17: compound shard (multi repo)
+const IndexFormatVersion = 17
 
 // FeatureVersion is increased if a feature is added that requires reindexing data
 // without changing the format version
@@ -69,6 +70,8 @@ type indexTOC struct {
 	nameEndRunes     simpleSection
 	contentChecksums simpleSection
 	runeDocSections  simpleSection
+
+	repos simpleSection
 }
 
 func (t *indexTOC) sections() []section {
@@ -98,5 +101,6 @@ func (t *indexTOC) sections() []section {
 		&t.contentChecksums,
 		&t.languages,
 		&t.runeDocSections,
+		&t.repos,
 	}
 }
