@@ -77,9 +77,19 @@ func merge(ds ...*indexData) (*IndexBuilder, error) {
 		return nil, err
 	}
 
+	lastRepoID := 0
+
 	for _, d := range ds {
 		for docID := uint32(0); int(docID) < len(d.fileBranchMasks); docID++ {
 			repoID := int(d.repos[docID])
+
+			if repoID != lastRepoID {
+				if lastRepoID+1 != repoID {
+					return nil, fmt.Errorf("non-contiguous repo ids in %s for document %d: old=%d current=%d", d.String(), docID, lastRepoID, repoID)
+				}
+				ib.setRepository(&d.repoMetaData[repoID])
+				lastRepoID = repoID
+			}
 
 			doc := Document{
 				Name: string(d.fileName(docID)),
@@ -113,6 +123,9 @@ func merge(ds ...*indexData) (*IndexBuilder, error) {
 				return nil, err
 			}
 		}
+
+		// reset lastRepoID so on the next loop we call setRepository.
+		lastRepoID = -1
 	}
 
 	return ib, nil
