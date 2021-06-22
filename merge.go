@@ -98,12 +98,19 @@ func merge(ds ...*indexData) (*IndexBuilder, error) {
 				SubRepositoryPath: d.subRepoPaths[repoID][d.subRepos[docID]],
 				Language:          d.languageMap[d.languages[docID]],
 				// SkipReason not set, will be part of content from original indexer.
-				// TODO Symbols
-				// TODO SymbolsMetaData
 			}
 
 			if doc.Content, err = d.readContents(docID); err != nil {
 				return nil, err
+			}
+
+			if doc.Symbols, _, err = d.readDocSections(docID, nil); err != nil {
+				return nil, err
+			}
+
+			doc.SymbolsMetaData = make([]*Symbol, len(doc.Symbols))
+			for i := range doc.SymbolsMetaData {
+				doc.SymbolsMetaData[i] = d.symbols.data(d.fileEndSymbol[docID] + uint32(i))
 			}
 
 			// calculate branches
