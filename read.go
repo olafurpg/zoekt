@@ -249,6 +249,8 @@ func (r *reader) readIndexData(toc *indexTOC) (*indexData, error) {
 		d.branchNames = append(d.branchNames, repoBranchNames)
 	}
 
+	d.repoTombstone = make([]bool, len(d.repoMetaData))
+
 	blob, err = d.readSectionBlob(toc.runeDocSections)
 	if err != nil {
 		return nil, err

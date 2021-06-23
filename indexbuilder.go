@@ -201,14 +201,7 @@ func (b *IndexBuilder) ContentSize() uint32 {
 // NewIndexBuilder creates a fresh IndexBuilder. The passed in
 // Repository contains repo metadata, and may be set to nil.
 func NewIndexBuilder(r *Repository) (*IndexBuilder, error) {
-	b := &IndexBuilder{
-		contentPostings: newPostingsBuilder(),
-		namePostings:    newPostingsBuilder(),
-		fileEndSymbol:   []uint32{0},
-		symIndex:        make(map[string]uint32),
-		symKindIndex:    make(map[string]uint32),
-		languageMap:     map[string]byte{},
-	}
+	b := newIndexBuilder()
 
 	if r == nil {
 		r = &Repository{}
@@ -217,6 +210,17 @@ func NewIndexBuilder(r *Repository) (*IndexBuilder, error) {
 		return nil, err
 	}
 	return b, nil
+}
+
+func newIndexBuilder() *IndexBuilder {
+	return &IndexBuilder{
+		contentPostings: newPostingsBuilder(),
+		namePostings:    newPostingsBuilder(),
+		fileEndSymbol:   []uint32{0},
+		symIndex:        make(map[string]uint32),
+		symKindIndex:    make(map[string]uint32),
+		languageMap:     map[string]byte{},
+	}
 }
 
 func (b *IndexBuilder) setRepository(desc *Repository) error {

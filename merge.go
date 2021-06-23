@@ -72,23 +72,29 @@ func merge(ds ...*indexData) (*IndexBuilder, error) {
 		return nil, fmt.Errorf("need 1 or more indexData to merge")
 	}
 
-	ib, err := NewIndexBuilder(&ds[0].Repository()[0])
-	if err != nil {
-		return nil, err
-	}
-
-	lastRepoID := 0
+	ib := newIndexBuilder()
 
 	for _, d := range ds {
+		lastRepoID := -1
 		for docID := uint32(0); int(docID) < len(d.fileBranchMasks); docID++ {
 			repoID := int(d.repos[docID])
 
+			if d.repoTombstone[repoID] {
+				continue
+			}
+
 			if repoID != lastRepoID {
-				if lastRepoID+1 != repoID {
+				if lastRepoID > repoID {
 					return nil, fmt.Errorf("non-contiguous repo ids in %s for document %d: old=%d current=%d", d.String(), docID, lastRepoID, repoID)
 				}
-				ib.setRepository(&d.repoMetaData[repoID])
 				lastRepoID = repoID
+
+				// TODO we are losing empty repos on merging since we only get here if
+				// there is an associated document.
+
+				if err := ib.setRepository(&d.repoMetaData[repoID]); err != nil {
+					return nil, err
+				}
 			}
 
 			doc := Document{
@@ -100,6 +106,7 @@ func merge(ds ...*indexData) (*IndexBuilder, error) {
 				// SkipReason not set, will be part of content from original indexer.
 			}
 
+			var err error
 			if doc.Content, err = d.readContents(docID); err != nil {
 				return nil, err
 			}
@@ -130,9 +137,6 @@ func merge(ds ...*indexData) (*IndexBuilder, error) {
 				return nil, err
 			}
 		}
-
-		// reset lastRepoID so on the next loop we call setRepository.
-		lastRepoID = -1
 	}
 
 	return ib, nil
