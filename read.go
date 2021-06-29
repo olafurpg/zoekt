@@ -455,7 +455,7 @@ func NewSearcher(r IndexFile) (Searcher, error) {
 
 // ReadMetadata returns the metadata of index shard without reading
 // the index data. The IndexFile is not closed.
-func ReadMetadata(inf IndexFile) (*Repository, *IndexMetadata, error) {
+func ReadMetadata(inf IndexFile) ([]*Repository, *IndexMetadata, error) {
 	rd := &reader{r: inf}
 	var toc indexTOC
 	if err := rd.readTOC(&toc); err != nil {
@@ -479,8 +479,7 @@ func ReadMetadata(inf IndexFile) (*Repository, *IndexMetadata, error) {
 		}
 	}
 
-	// TODO return all repos
-	return repos[0], &md, nil
+	return repos, &md, nil
 }
 
 func loadIndexData(r IndexFile) (*indexData, error) {

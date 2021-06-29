@@ -286,7 +286,7 @@ func (o *Options) IncrementalSkipIndexing() bool {
 	}
 	defer iFile.Close()
 
-	repo, index, err := zoekt.ReadMetadata(iFile)
+	repos, index, err := zoekt.ReadMetadata(iFile)
 	if err != nil {
 		return false
 	}
@@ -294,6 +294,13 @@ func (o *Options) IncrementalSkipIndexing() bool {
 	if index.IndexFeatureVersion != zoekt.FeatureVersion {
 		return false
 	}
+
+	// This shouldn't happen. shardName above should only be reading
+	// non-compound shards.
+	if len(repos) != 1 {
+		return false
+	}
+	repo := repos[0]
 
 	if repo.IndexOptions != o.HashOptions() {
 		return false
