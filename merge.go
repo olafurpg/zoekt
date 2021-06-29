@@ -1,6 +1,7 @@
 package zoekt
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -24,7 +25,18 @@ func Merge(dstDir string, files ...IndexFile) error {
 		return err
 	}
 
-	fn := filepath.Join(dstDir, fmt.Sprintf("merged_v%d.%05d.zoekt", IndexFormatVersion, 0))
+	hasher := sha1.New()
+	for _, d := range ds {
+		for i, md := range d.repoMetaData {
+			if d.repoTombstone[i] {
+				continue
+			}
+			hasher.Write([]byte(md.Name))
+			hasher.Write([]byte{0})
+		}
+	}
+
+	fn := filepath.Join(dstDir, fmt.Sprintf("compound-%x_v%d.%05d.zoekt", hasher.Sum(nil), IndexFormatVersion, 0))
 	return builderWriteAll(fn, ib)
 }
 
@@ -140,4 +152,7 @@ func merge(ds ...*indexData) (*IndexBuilder, error) {
 	}
 
 	return ib, nil
+}
+
+type nameHash struct {
 }
